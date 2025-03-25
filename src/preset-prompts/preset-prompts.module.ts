@@ -20,6 +20,9 @@ export class PresetPromptsModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(ApiKeyMiddleware, RateLimiterMiddleware)
-      .forRoutes({ path: 'preset-prompts*', method: RequestMethod.ALL });
+      .forRoutes(
+        { path: 'preset-prompts', method: RequestMethod.ALL },
+        { path: 'preset-prompts/:id', method: RequestMethod.ALL }
+      );
   }
 } 

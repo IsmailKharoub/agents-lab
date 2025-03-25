@@ -28,7 +28,17 @@ export class UpdateAgentDto {
   @IsOptional()
   generateGif?: boolean;
 
+  @IsString()
+  @IsOptional()
+  @IsEnum(['mobile', 'tablet', 'pc'])
+  browserSize?: string;
+
   @IsEnum(AgentStatus)
   @IsOptional()
   status?: AgentStatus;
+  
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  currentStep?: number;
 } 

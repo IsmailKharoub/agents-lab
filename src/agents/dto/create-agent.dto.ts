@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber, Min, Max, IsEnum } from 'class-validator';
 
 export class CreateAgentDto {
   @IsString()
@@ -26,6 +26,11 @@ export class CreateAgentDto {
   @IsBoolean()
   @IsOptional()
   generateGif: boolean = false;
+
+  @IsString()
+  @IsOptional()
+  @IsEnum(['mobile', 'tablet', 'pc'])
+  browserSize: string = 'mobile';
 
   @IsString()
   @IsOptional()

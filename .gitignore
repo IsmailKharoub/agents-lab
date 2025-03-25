@@ -12,6 +12,10 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+*.gif
+
+agent_history.json
+
 # OS
 .DS_Store
 

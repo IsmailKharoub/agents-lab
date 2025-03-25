@@ -21,12 +21,15 @@ import { Agent, AgentDocument } from './schemas/agent.schema';
 import { AgentLog, AgentLogDocument } from './schemas/agent-log.schema';
 import { AgentResult, AgentResultDocument } from './schemas/agent-result.schema';
 import { Artifact, ArtifactDocument } from './schemas/artifact.schema';
+import { PythonAgentService } from './python-agent.service';
+import { AgentStatus } from '../common/types/agent.types';
 
 @Controller('agents')
 export class AgentsController {
   constructor(
     private readonly agentsService: AgentsService,
     private readonly daemonService: DaemonService,
+    private readonly pythonAgentService: PythonAgentService,
   ) {}
 
   @Post()
@@ -125,12 +128,28 @@ export class AgentsController {
   @Post(':id/start')
   async startAgent(@Param('id') id: string): Promise<ApiResponse<{ agent: AgentInterface }>> {
     try {
-      const success = await this.daemonService.startAgent(id);
+      console.log(`Attempting to start agent ${id} directly through AgentsController`);
+      
+      // Attempt to start the agent
+      const success = await this.pythonAgentService.startAgent(id);
+      
+      // Get the latest agent status regardless of success
+      const agent = await this.agentsService.findOne(id);
+      
+      // If the agent is already running, return success rather than error
+      if (!success && agent.status === AgentStatus.RUNNING) {
+        return {
+          status: 'success',
+          message: 'Agent is already running',
+          data: { agent: this.mapAgentToInterface(agent) },
+        };
+      }
+      
+      // If not running and we couldn't start it, throw error
       if (!success) {
         throw new Error('Failed to start agent process');
       }
       
-      const agent = await this.agentsService.findOne(id);
       return {
         status: 'success',
         message: 'Agent started successfully',
@@ -278,6 +297,23 @@ export class AgentsController {
     }
   }
 
+  @Get(':id/stats')
+  async getAgentStats(@Param('id') id: string): Promise<ApiResponse<{ stats: any }>> {
+    try {
+      const stats = await this.agentsService.getAgentStats(id);
+      return {
+        status: 'success',
+        data: { stats },
+      };
+    } catch (error) {
+      throw new HttpException({
+        status: 'error',
+        message: `Failed to fetch statistics for agent with id ${id}`,
+        details: error.message,
+      }, HttpStatus.NOT_FOUND);
+    }
+  }
+
   // Helper methods to map schema models to interface types
   private mapAgentToInterface(agent: Agent & { _id?: any, createdAt?: Date, updatedAt?: Date }): AgentInterface {
     return {
@@ -287,6 +323,7 @@ export class AgentsController {
       createdAt: agent.createdAt?.toISOString() || new Date().toISOString(),
       updatedAt: agent.updatedAt?.toISOString() || new Date().toISOString(),
       completedAt: agent.completedAt?.toISOString(),
+      browserSize: agent.browserSize,
       model: agent.modelName,
       maxSteps: agent.maxSteps,
       headless: agent.headless,

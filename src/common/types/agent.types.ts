@@ -1,5 +1,6 @@
 export enum AgentStatus {
   PENDING = "PENDING",
+  IDLE = "IDLE",
   RUNNING = "RUNNING",
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
@@ -19,6 +20,7 @@ export interface Agent {
   headless: boolean;
   useVision: boolean;
   generateGif: boolean;
+  browserSize: string; // "mobile" | "tablet" | "pc"
   userId?: string;
   results?: AgentResult;
   logs?: AgentLog[];

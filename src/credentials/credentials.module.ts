@@ -20,6 +20,10 @@ export class CredentialsModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(ApiKeyMiddleware, RateLimiterMiddleware)
-      .forRoutes({ path: 'credentials*', method: RequestMethod.ALL });
+      .forRoutes(
+        { path: 'credentials', method: RequestMethod.ALL },
+        { path: 'credentials/:id', method: RequestMethod.ALL },
+        { path: 'credentials/verify', method: RequestMethod.ALL }
+      );
   }
 } 

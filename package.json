@@ -17,7 +17,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "kill-ports": "scripts/kill-ports.sh",
+    "restart:dev": "npm run kill-ports && npm run start:dev",
+    "restart:debug": "npm run kill-ports && npm run start:debug",
+    "restart:prod": "npm run kill-ports && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -29,6 +33,7 @@
     "@nestjs/platform-socket.io": "^11.0.12",
     "@nestjs/serve-static": "^5.0.3",
     "@nestjs/websockets": "^11.0.12",
+    "@types/ws": "^8.18.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -38,7 +43,8 @@
     "rate-limiter-flexible": "^6.2.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

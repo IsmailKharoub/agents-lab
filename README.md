@@ -10,6 +10,7 @@ A backend API for the Web Agent application that can be run as a daemon locally.
 - Daemon mode for running agents in a separate process
 - API Key authentication
 - Rate limiting
+- Graceful shutdown management for proper resource cleanup
 
 ## Requirements
 
@@ -42,6 +43,9 @@ mongod --dbpath /path/to/your/data/directory
 
 # Start the application in development mode
 npm run start:dev
+
+# Or restart if ports might be in use
+npm run restart:dev
 ```
 
 ### Production Mode
@@ -52,6 +56,9 @@ npm run build
 
 # Start the application in production mode
 npm run start:prod
+
+# Or restart if ports might be in use
+npm run restart:prod
 ```
 
 ### Daemon Mode
@@ -63,6 +70,23 @@ The application can be run in daemon mode, where agent operations are handled in
 DAEMON_ENABLED=true
 DAEMON_PORT=3001
 ```
+
+### Port Management
+
+The application handles graceful shutdowns to properly release ports and clean up resources. If you ever encounter port conflicts, you can use:
+
+```bash
+# Kill processes using the API ports
+npm run kill-ports
+
+# Kill processes using specific ports
+scripts/kill-ports.sh [API_PORT] [DAEMON_PORT] [WEBSOCKET_PORT]
+```
+
+The default ports are:
+- API: 3030
+- Daemon: 3031
+- WebSocket: 3032
 
 ## API Documentation
 
