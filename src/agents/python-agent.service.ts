@@ -391,6 +391,60 @@ if __name__ == "__main__":
       return false;
     }
   }
+
+  async pauseAgent(agentId: string): Promise<boolean> {
+    const agentData = this.activeAgents.get(agentId);
+    if (!agentData) {
+      this.logger.warn(`Agent ${agentId} is not running`);
+      return false;
+    }
+    
+    try {
+      // Send SIGSTOP to pause the process
+      agentData.process.kill('SIGSTOP');
+      
+      // Log pausing
+      await this.agentsService.addAgentLog(
+        agentId,
+        'info',
+        'Agent execution paused by user',
+        0,
+        { action: 'user_pause' }
+      );
+      
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to pause agent ${agentId}: ${error.message}`);
+      return false;
+    }
+  }
+
+  async resumeAgent(agentId: string): Promise<boolean> {
+    const agentData = this.activeAgents.get(agentId);
+    if (!agentData) {
+      this.logger.warn(`Agent ${agentId} is not running`);
+      return false;
+    }
+    
+    try {
+      // Send SIGCONT to resume the process
+      agentData.process.kill('SIGCONT');
+      
+      // Log resuming
+      await this.agentsService.addAgentLog(
+        agentId,
+        'info',
+        'Agent execution resumed by user',
+        0,
+        { action: 'user_resume' }
+      );
+      
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to resume agent ${agentId}: ${error.message}`);
+      return false;
+    }
+  }
   
   private async handleAgentMessage(agentId: string, message: any): Promise<void> {
     // Handle different message types from the Python script

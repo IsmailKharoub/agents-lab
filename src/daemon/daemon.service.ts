@@ -177,10 +177,28 @@ export class DaemonService implements OnModuleInit, OnModuleDestroy {
       if (this.daemonEnabled && !this.isShuttingDown) {
         // In daemon mode, send a message to the daemon process
         this.events.emit('agent:stop', agentId);
+        
+        // Also stop the agent directly through PythonAgentService as a fallback
+        await this.pythonAgentService.stopAgent(agentId);
+        
+        // Update agent status
+        await this.agentsService.updateAgentStatus(agentId, AgentStatus.STOPPED);
+        
+        // Notify through WebSocket
+        this.webSocketGateway.emitAgentStatusUpdate(agentId, AgentStatus.STOPPED, 0, 0);
+        
         return true;
       } else {
         // In single process mode or during shutdown, stop the agent using PythonAgentService directly
-        return await this.pythonAgentService.stopAgent(agentId);
+        const stopped = await this.pythonAgentService.stopAgent(agentId);
+        if (stopped) {
+          // Update agent status
+          await this.agentsService.updateAgentStatus(agentId, AgentStatus.STOPPED);
+          
+          // Notify through WebSocket
+          this.webSocketGateway.emitAgentStatusUpdate(agentId, AgentStatus.STOPPED, 0, 0);
+        }
+        return stopped;
       }
     } catch (error) {
       this.logger.error(`Failed to stop agent ${agentId}: ${error.message}`);
@@ -198,10 +216,44 @@ export class DaemonService implements OnModuleInit, OnModuleDestroy {
       if (this.daemonEnabled) {
         // In daemon mode, send a message to the daemon process
         this.events.emit('agent:pause', agentId);
-        return true;
+        
+        // Also pause through PythonAgentService
+        const paused = await this.pythonAgentService.pauseAgent(agentId);
+        if (paused) {
+          // Update agent status
+          await this.agentsService.updateAgentStatus(agentId, AgentStatus.PAUSED);
+          
+          // Get current agent state
+          const agent = await this.agentsService.findOne(agentId);
+          
+          // Notify through WebSocket
+          this.webSocketGateway.emitAgentStatusUpdate(
+            agentId, 
+            AgentStatus.PAUSED, 
+            agent.currentStep || 0,
+            agent.maxSteps || 0
+          );
+        }
+        return paused;
       } else {
-        // In single process mode, update agent status to PAUSED
-        return await this.agentsService.updateAgentStatus(agentId, AgentStatus.PAUSED);
+        // In single process mode, pause through PythonAgentService
+        const paused = await this.pythonAgentService.pauseAgent(agentId);
+        if (paused) {
+          // Update agent status
+          await this.agentsService.updateAgentStatus(agentId, AgentStatus.PAUSED);
+          
+          // Get current agent state
+          const agent = await this.agentsService.findOne(agentId);
+          
+          // Notify through WebSocket
+          this.webSocketGateway.emitAgentStatusUpdate(
+            agentId, 
+            AgentStatus.PAUSED, 
+            agent.currentStep || 0,
+            agent.maxSteps || 0
+          );
+        }
+        return paused;
       }
     } catch (error) {
       this.logger.error(`Failed to pause agent ${agentId}: ${error.message}`);
